@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
@@ -11,6 +11,7 @@ function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const googleButtonRef = useRef(null)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -28,6 +29,39 @@ function LoginPage() {
       setError('Invalid email or password')
     }
   }
+
+  async function handleGoogleResponse(response) {
+    setError('')
+    try {
+      const backendResponse = await api.post('/auth/google', {
+        idToken: response.credential,
+      })
+      const { token, email: userEmail, role } = backendResponse.data
+
+      login(token, userEmail, role)
+
+      const redirectTo = location.state?.redirectTo || '/events'
+      navigate(redirectTo)
+    } catch (err) {
+      setError('Google login failed')
+    }
+  }
+
+  useEffect(() => {
+    /* global google */
+    if (window.google) {
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+      })
+
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: 300,
+      })
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -65,6 +99,14 @@ function LoginPage() {
         >
           Login
         </button>
+
+        <div className="my-4 flex items-center gap-2">
+          <div className="flex-1 h-px bg-gray-300"></div>
+          <span className="text-gray-400 text-sm">or</span>
+          <div className="flex-1 h-px bg-gray-300"></div>
+        </div>
+
+        <div ref={googleButtonRef} className="flex justify-center"></div>
       </form>
     </div>
   )
