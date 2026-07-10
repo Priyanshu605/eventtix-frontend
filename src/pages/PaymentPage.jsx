@@ -13,11 +13,15 @@ function PaymentPage() {
   const [error, setError] = useState('')
 
   async function handlePayNow() {
+    if (seatIds.length === 0) {
+      navigate(`/events/${eventId}/seats`)
+      return
+    }
+
     setProcessing(true)
     setError('')
 
     try {
-      // Step 1: ask our backend to create a Razorpay order
       const orderResponse = await api.post('/payments/create-order', {
         eventId,
         seatIds,
@@ -25,16 +29,14 @@ function PaymentPage() {
 
       const { orderId, amount, razorpayKeyId } = orderResponse.data
 
-      // Step 2: configure and open Razorpay's checkout widget
       const options = {
         key: razorpayKeyId,
-        amount: Math.round(amount * 100), // paise
+        amount: Math.round(amount * 100),
         currency: 'INR',
         name: 'EventTix',
         description: 'Seat booking payment',
         order_id: orderId,
         handler: async function (response) {
-          // Step 3: this runs automatically after a successful test payment
           await confirmBooking(
             response.razorpay_order_id,
             response.razorpay_payment_id,
@@ -44,6 +46,7 @@ function PaymentPage() {
         modal: {
           ondismiss: function () {
             setProcessing(false)
+            navigate(`/events/${eventId}/seats`)
           },
         },
         theme: {
@@ -77,8 +80,14 @@ function PaymentPage() {
 
   if (seatIds.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center flex-col gap-4">
         <p className="text-gray-600">No seats selected. Please go back and select seats first.</p>
+        <button
+          onClick={() => navigate('/events')}
+          className="text-blue-600 hover:underline"
+        >
+          Back to events
+        </button>
       </div>
     )
   }
