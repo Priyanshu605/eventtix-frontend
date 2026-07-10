@@ -3,7 +3,8 @@
 React frontend for **EventTix** — a full-stack event ticketing platform with real-time seat locking, secure payments, and OAuth2 authentication.
 
 **Backend Repo:** [eventtix](https://github.com/Priyanshu605/eventtix)
-**Live Demo:** _(add link after deployment)_
+**Live Demo:** https://eventtix-frontend.vercel.app
+> **Note:** The backend is hosted on Render's free tier, which spins down after inactivity. The first request may take 30-60 seconds to respond while the server wakes up.
 
 ---
 
